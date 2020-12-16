@@ -7,7 +7,7 @@ namespace dvs_integrator_conv {
 
 Integrator::Integrator(ros::NodeHandle & nh, ros::NodeHandle nh_private) : nh_(nh)
 {
-  // Get parameters of display method
+  // Get parameters of the method from the launch file
   nh_private.param<double>("cut_off", alpha_cutoff_, 5.);
 
   // Set up subscribers and publishers
@@ -23,8 +23,10 @@ Integrator::Integrator(ros::NodeHandle & nh, ros::NodeHandle nh_private) : nh_(n
   server_.reset(new dynamic_reconfigure::Server<dvs_integrator_conv::dvs_integrator_convConfig>(nh_private));
   server_->setCallback(dynamic_reconfigure_callback_);
 
+  // Contrast thresholds
+  // Later we may use varying contrast sensitivities
   c_pos_ = 0.1;
-  c_neg_ = 0.1; // Later we may use different contrast sensitivities for positive and negative events
+  c_neg_ = 0.1;
   t_last_ = 0.;
 }
 
@@ -36,6 +38,9 @@ Integrator::~Integrator()
 }
 
 
+/**
+ * Process input event messages
+ */
 void Integrator::eventsCallback(const dvs_msgs::EventArray::ConstPtr& msg)
 {
   // Need to update the state (time_map and brightness image) even if there are no subscribers on the output image
@@ -94,6 +99,9 @@ void Integrator::eventsCallback(const dvs_msgs::EventArray::ConstPtr& msg)
 }
 
 
+/**
+ * Publish the time map and the brightness image at latest time (Output)
+ */
 void Integrator::publishState()
 {
   // Publish the current state (time map and image)
@@ -114,7 +122,7 @@ void Integrator::publishState()
   normalize(state_time_map_, cv_image_time.image, 5.);
   normalize(image_out, cv_image.image, 5.);
 
-  // Publish
+  // Publish the time map and the brightness image
   time_map_pub_.publish(cv_image_time.toImageMsg());
   image_pub_.publish(cv_image.toImageMsg());
 }
@@ -132,6 +140,9 @@ void Integrator::setKernel(cv::Mat& ker)
 }
 
 
+/**
+ * Interface with the parameters that can be changed online via dynamic reconfigure
+ */
 void Integrator::reconfigureCallback(dvs_integrator_conv::dvs_integrator_convConfig &config, uint32_t level)
 {
   alpha_cutoff_ = config.Cutoff_frequency;
@@ -139,6 +150,14 @@ void Integrator::reconfigureCallback(dvs_integrator_conv::dvs_integrator_convCon
 }
 
 
+/**
+ * Compute the robust min and max pixel values of an image using percentiles,
+ * e.g., 2th and 98th percentiles instead of min and max, respectively.
+ *
+ * Sort the pixel values of an image and discard a percentage of them,
+ * from the top and the bottom, as potential outliers to compute
+ * a robust version of the min and max values.
+ */
 void Integrator::minMaxLocRobust(const cv::Mat& image, double& rmin, double& rmax,
                                  const double& percentage_pixels_to_discard)
 {
@@ -153,9 +172,11 @@ void Integrator::minMaxLocRobust(const cv::Mat& image, double& rmin, double& rma
 }
 
 
+/**
+ * Normalize src to the range [0,255] using robust min and max values
+ */
 void Integrator::normalize(const cv::Mat& src, cv::Mat& dst, const double& percentage_pixels_to_discard)
 {
-  // Normalize src to the range [0,255] using robust min and max values
   double rmin_val, rmax_val;
   minMaxLocRobust(src, rmin_val, rmax_val, percentage_pixels_to_discard);
   const double scale = ((rmax_val != rmin_val) ? 255. / (rmax_val - rmin_val) : 1.);

@@ -29,8 +29,8 @@ private:
   // Publishers
   image_transport::Publisher image_pub_;
   image_transport::Publisher time_map_pub_;
-  cv::Mat state_time_map_;
-  cv::Mat state_image_;
+  cv::Mat state_time_map_;  // Time of the last event at each pixel
+  cv::Mat state_image_;     // Brightness value at each pixel
   void publishState();
 
   // Dynamic reconfigure

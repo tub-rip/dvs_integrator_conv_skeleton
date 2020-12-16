@@ -4,6 +4,11 @@ Event-by-event processing in ROS C++ for the purpose of image reconstruction (us
 
 The package reads events from a topic and outputs the reconstructed images convolved with a spatial kernel. The method uses per-pixel temporal filters (leaky integrators). It has the functionality to dynamically select a spatial convolution kernel.
 
+## Documentation and videos
+- [Problem statement: Reconstructing Convolved Images](https://drive.google.com/file/d/1RSXUBPkFZH0SA-m8NnqDXRxWHI6KB1iW/view?usp=sharing) 
+- [Video result on simulation_3planes sequence (synthetic)](https://youtu.be/gXZNpP5Fz2w)
+- [Video result on slider_depth sequence](https://youtu.be/ZR9KKXeUKkw)
+- [Video result on bicycle sequence](https://youtu.be/wZYJ4589LNc)
 
 ## Input / Output
 **Input**:
@@ -20,7 +25,32 @@ The package reads events from a topic and outputs the reconstructed images convo
 
 ## Dependencies
 
-Requires [catkin_simple](https://github.com/catkin/catkin_simple) and [rpg_dvs_ros](https://github.com/uzh-rpg/rpg_dvs_ros) driver
+### Create a catkin workspace
+
+Create a catkin workspace (if there is none yet). For example, from your home folder:
+
+	cd
+	mkdir -p catkin_ws/src
+	cd catkin_ws
+	catkin config --init --mkdirs --extend /opt/ros/melodic --merge-devel --cmake-args -DCMAKE_BUILD_TYPE=Release
+	
+Depending on the ROS distribution you installed, you might have to use `kinetic` instead of `melodic` in the previous command.
+
+### Add packages to the catkin workspace
+
+Clone this repository into the `src` folder of your catkin workspace.
+
+The catkin package dependencies are:
+- [catkin simple](https://github.com/catkin/catkin_simple)
+- ROS messages for DVS ([rpg_dvs_ros](https://github.com/uzh-rpg/rpg_dvs_ros))
+
+The above dependencies are specified in the [dependencies.yaml](dependencies.yaml) file. They can be installed with the following commands from the `src` folder of your catkin workspace:
+
+	cd catkin_ws/src
+	sudo apt-get install python3-vcstool
+	vcs-import < dvs_integrator_conv/dependencies.yaml
+
+The previous command should clone the the repositories into folders *catkin_simple* and *rpg_dvs_ros* inside the src/ folder of your catkin workspace, at the same level as this repository *dvs_integrator_conv*. They should NOT be inside the *dvs_integrator_conv* folder.
 
 
 ## Compile
@@ -68,7 +98,7 @@ Open the rqt perspective view with four visualizers. This file is in the launch 
 
 	rqt --perspective-file launch/integrator_view.perspective
 
-Run the visualizer node in another terminal:
+(Optional) Run the visualizer node in another terminal:
 
 	roslaunch dvs_displayer display_monocular.launch
 
@@ -80,9 +110,9 @@ In another terminal play the bag with the event data:
 
 	rosbag play -l -r 0.1 --pause path_to_file/slider_depth.bag
 
-Press the space bar to  play / pause the reproduction of the bag. Event messages are accumulated in the suscriber of dvs_integrator, to avoid losing events for the reconstruction.
+Press the space bar to  play / pause the reproduction of the bag. Event messages are accumulated in the subscriber of dvs_integrator, to avoid losing events for the reconstruction.
 	
-In another terminal open the dynamic reconfigure and play around with the parameters in the window named `dvs_displayer_one`
+In another terminal open the dynamic reconfigure and play around with the parameter(s) in the window named `dvs_integrator_one`
 	
 	rosrun rqt_reconfigure rqt_reconfigure
 
@@ -91,11 +121,9 @@ Using the same roscore during execution of multiple runs of the dvs_integrator a
 End the program execution with `Ctrl + C` keyboard shortcut. 
 
 
-## TO DO:
-- Allow for different contrast sensitivity depending on the polarity (using a parameter in dynamic reconfigure)
-- Display events using a fixed number of them (currently we are displaying the events as arranged in ROS messages)
-- Display events using a fixed time interval
-- Allow interaction (using dynamic reconfifure), to change the number of events or the size of the time slice. Use a parameter to control the rate of output images published (number of events or Delta-t).
+## (Optional) Possible extensions:
+- Interaction (using dynamic reconfigure). Add a parameter in the dynamic reconfigure GUI to change the contrast sensitivity online.
+- Currently we are displaying the events as they are arranged in the ROS messages. Add a parameter that allows to control the rate at which the reconstructed image is published. Use, for example a fixed number of events or a fixed time interval.
 
 
 ## Reference
