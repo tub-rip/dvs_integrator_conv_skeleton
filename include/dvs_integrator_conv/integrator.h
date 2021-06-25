@@ -48,7 +48,7 @@ private:
   void setKernel(cv::Mat& ker);
   const cv::Mat sobel_x_ = (cv::Mat_<double>(3,3) << -1, 0, 1, -2, 0, 2, -1, 0, 1) / 8.;
   const cv::Mat sobel_y_ = (cv::Mat_<double>(3,3) << -1, -2, -1, 0, 0, 0, 1, 2, 1) / 8.;
-  const cv::Mat laplace_ = (cv::Mat_<double>(3,3) << 1, 4, 1, 4, -20, 4, 1, 4, 1) / 6.;
+  const cv::Mat laplace_ = (cv::Mat_<double>(3,3) << 1, 4, 1, 4, -20, 4, 1, 4, 1) / 6.;  // Matlab fspecial function with default alpha = 0.2
   const cv::Mat blur_gauss_ = (cv::Mat_<double>(3,3) << 0.01134, 0.08381, 0.01134, 0.08381, 0.6194, 0.08381, 0.01134, 0.08381, 0.01134); // sigma = 0.5
 
   void minMaxLocRobust(const cv::Mat& image, double& min, double& max,
